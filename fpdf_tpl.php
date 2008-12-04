@@ -228,7 +228,7 @@ class FPDF_TPL extends FPDF {
             
         parent::SetFont($family, $style, $size);
        
-        $fontkey = $this->FontFamily.$this->FontStyle;
+        $fontkey = $this->FontFamily.trim($this->FontStyle,'U');
         
         if ($this->_intpl) {
             $this->_res['tpl'][$this->tpl]['fonts'][$fontkey] =& $this->fonts[$fontkey];
