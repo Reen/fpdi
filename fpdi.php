@@ -234,7 +234,7 @@ class FPDI extends FPDF_TPL {
         	$this->_putformxobjects();
             $this->_putimportedobjects();
             //Resource dictionary
-        	$this->offsets[2]=strlen($this->buffer);
+			$this->offsets[2]=$this->bufferlen;
         	$this->_out('2 0 obj');
         	$this->_out('<<');
         	$this->_putresourcedict();
@@ -250,7 +250,7 @@ class FPDI extends FPDF_TPL {
     	  	$this->_putformxobjects();
             $this->_putimportedobjects();
             //Resource dictionary
-    		$this->offsets[2]=strlen($this->buffer);
+			$this->offsets[2]=$this->bufferlen;
     		$this->_out('2 0 obj');
     		$this->_out('<<');
     		$this->_putresourcedict();
@@ -345,7 +345,7 @@ class FPDI extends FPDF_TPL {
 
     	//Begin a new object
         if (!$onlynewobj) {
-            $this->offsets[$obj_id] = strlen($this->buffer);
+            $this->offsets[$obj_id] = $this->bufferlen;
             $this->_out($obj_id.' 0 obj');
             $this->_current_obj_id = $obj_id; // for later use with encryption
         }
@@ -469,7 +469,7 @@ class FPDI extends FPDF_TPL {
             } else
                 $this->tpls[$this->tpl]['buffer'] .= $s.($ln == true ? "\n" : '');
         } else {
-	 	    $this->buffer.=$s.($ln == true ? "\n" : '');
+			$this->setBuffer($s.($ln == true ? "\n" : ''));
         }
     }
 
