@@ -460,11 +460,11 @@ class FPDI extends FPDF_TPL {
             if (!$this->_intpl) {
                 if (is_subclass_of($this, 'TCPDF') && isset($this->footerlen[$this->page]) AND ($this->footerlen[$this->page] > 0)) {
 					// puts data before page footer
-					$page = substr($this->pages[$this->page], 0, -$this->footerlen[$this->page]);
-					$footer = substr($this->pages[$this->page], -$this->footerlen[$this->page]);
-					$this->pages[$this->page] = $page." ".$s."\n".$footer;
+					$page = substr($this->getPageBuffer($this->page), 0, -$this->footerlen[$this->page]);
+					$footer = substr($this->getPageBuffer($this->page), -$this->footerlen[$this->page]);
+					$this->setPageBuffer($this->page, $page." ".$s."\n".$footer);
 				} else {
-                    $this->pages[$this->page] .= $s.($ln == true ? "\n" : '');
+					$this->setPageBuffer($this->page, $s.($ln == true ? "\n" : ''), true);
                 }
             } else
                 $this->tpls[$this->tpl]['buffer'] .= $s.($ln == true ? "\n" : '');
