@@ -206,7 +206,7 @@ class FPDI extends FPDF_TPL {
                     while($n = key($this->_obj_stack[$filename])) {
                         $nObj = $this->current_parser->pdf_resolve_object($this->current_parser->c,$this->_obj_stack[$filename][$n][1]);
 						
-                        $this->_newobj($this->_obj_stack[$filename][$n][0]);
+                        $this->_newobj_fpdi($this->_obj_stack[$filename][$n][0]);
                         
                         if ($nObj[0] == PDF_TYPE_STREAM) {
 							$this->pdf_write_value ($nObj);
@@ -260,7 +260,7 @@ class FPDI extends FPDF_TPL {
     		$this->_putbookmarks();
     		// encryption
     		if ($this->encrypted) {
-    			$this->_newobj();
+    			$this->_newobj_fpdi();
     			$this->enc_obj_id = $this->n;
     			$this->_out('<<');
     			$this->_putencryption();
@@ -278,7 +278,7 @@ class FPDI extends FPDF_TPL {
 	    reset($this->tpls);
         foreach($this->tpls AS $tplidx => $tpl) {
             $p=($this->compress) ? gzcompress($tpl['buffer']) : $tpl['buffer'];
-    		$this->_newobj();
+    		$this->_newobj_fpdi();
     		$cN = $this->n; // TCPDF/Protection: rem current "n"
     		
     		$this->tpls[$tplidx]['n'] = $this->n;
@@ -338,7 +338,7 @@ class FPDI extends FPDF_TPL {
     /**
      * Rewritten to handle existing own defined objects
      */
-    function _newobj($obj_id=false,$onlynewobj=false) {
+    function _newobj_fpdi($obj_id=false,$onlynewobj=false) {
         if (!$obj_id) {
             $obj_id = ++$this->n;
         }
@@ -407,7 +407,7 @@ class FPDI extends FPDF_TPL {
     			// Fill the object stack if needed
     			$cpfn =& $this->current_parser->filename;
     			if (!isset($this->_don_obj_stack[$cpfn][$value[1]])) {
-                    $this->_newobj(false,true);
+                    $this->_newobj_fpdi(false,true);
                     $this->_obj_stack[$cpfn][$value[1]] = array($this->n, $value);
                     $this->_don_obj_stack[$cpfn][$value[1]] = array($this->n, $value); // Value is maybee obsolete!!!
                 }
