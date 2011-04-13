@@ -1,8 +1,8 @@
 <?php
 //
-//  FPDI - Version 1.2.1
+//  FPDI - Version 1.4.1
 //
-//    Copyright 2004-2008 Setasign - Jan Slabon
+//    Copyright 2004-2011 Setasign - Jan Slabon
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -28,38 +28,21 @@
  */
 class FPDF extends TCPDF {
     
-    /**
-     * Missing in TCPDF
-     *
-     * @var string
-     */
-    var $padding;
-    
-    function __get($name) {
-        switch ($name) {
-            case 'PDFVersion':
-                return $this->PDFVersion;
-            case 'k':
-                return $this->k;
-            case 'lastUsedPageBox':
-                return $this->lastUsedPageBox;
-            default:
-                // Error handling
-                $this->Error('Cannot access protected property '.get_class($this).':$'.$name.' / Undefined property: '.get_class($this).'::$'.$name);
+	function _putstream($s) {
+		$this->_out($this->_getstream($s));
+	}
+	
+	function _getxobjectdict() {
+        $out = parent::_getxobjectdict();
+        if (count($this->tpls)) {
+            foreach($this->tpls as $tplidx => $tpl) {
+                $out .= sprintf('%s%d %d 0 R', $this->tplprefix, $tplidx, $tpl['n']);
+            }
         }
+        
+        return $out;
     }
-
-    function __set($name, $value) {
-        switch ($name) {
-            case 'PDFVersion':
-                $this->PDFVersion = $value;
-                break;
-            default:
-                // Error handling
-                $this->Error('Cannot access protected property '.get_class($this).':$'.$name.' / Undefined property: '.get_class($this).'::$'.$name);
-        }
-    }
-
+	
     /**
      * Encryption of imported data by FPDI
      *
@@ -67,7 +50,7 @@ class FPDF extends TCPDF {
      */
     function pdf_write_value(&$value) {
         switch ($value[0]) {
-    		case PDF_TYPE_STRING :
+    		case PDF_TYPE_STRING:
 				if ($this->encrypted) {
 				    $value[1] = $this->_unescape($value[1]);
                     $value[1] = $this->_RC4($this->_objectkey($this->_current_obj_id), $value[1]);
@@ -75,13 +58,13 @@ class FPDF extends TCPDF {
                 } 
     			break;
     			
-			case PDF_TYPE_STREAM :
+			case PDF_TYPE_STREAM:
 			    if ($this->encrypted) {
 			        $value[2][1] = $this->_RC4($this->_objectkey($this->_current_obj_id), $value[2][1]);
                 }
                 break;
                 
-            case PDF_TYPE_HEX :
+            case PDF_TYPE_HEX:
             	if ($this->encrypted) {
                 	$value[1] = $this->hex2str($value[1]);
                 	$value[1] = $this->_RC4($this->_objectkey($this->_current_obj_id), $value[1]);
@@ -100,16 +83,62 @@ class FPDF extends TCPDF {
      * @return string
      */
     function _unescape($s) {
-        return strtr($s, array(
-            '\\\\' => "\\",
-            '\)' => ')',
-            '\(' => '(',
-            '\\f' => chr(0x0C),
-            '\\b' => chr(0x08),
-            '\\t' => chr(0x09),
-            '\\r' => chr(0x0D),
-            '\\n' => chr(0x0A),
-        ));
+        $out = '';
+        for ($count = 0, $n = strlen($s); $count < $n; $count++) {
+            if ($s[$count] != '\\' || $count == $n-1) {
+                $out .= $s[$count];
+            } else {
+                switch ($s[++$count]) {
+                    case ')':
+                    case '(':
+                    case '\\':
+                        $out .= $s[$count];
+                        break;
+                    case 'f':
+                        $out .= chr(0x0C);
+                        break;
+                    case 'b':
+                        $out .= chr(0x08);
+                        break;
+                    case 't':
+                        $out .= chr(0x09);
+                        break;
+                    case 'r':
+                        $out .= chr(0x0D);
+                        break;
+                    case 'n':
+                        $out .= chr(0x0A);
+                        break;
+                    case "\r":
+                        if ($count != $n-1 && $s[$count+1] == "\n")
+                            $count++;
+                        break;
+                    case "\n":
+                        break;
+                    default:
+                        // Octal-Values
+                        if (ord($s[$count]) >= ord('0') &&
+                            ord($s[$count]) <= ord('9')) {
+                            $oct = ''. $s[$count];
+                                
+                            if (ord($s[$count+1]) >= ord('0') &&
+                                ord($s[$count+1]) <= ord('9')) {
+                                $oct .= $s[++$count];
+                                
+                                if (ord($s[$count+1]) >= ord('0') &&
+                                    ord($s[$count+1]) <= ord('9')) {
+                                    $oct .= $s[++$count];    
+                                }                            
+                            }
+                            
+                            $out .= chr(octdec($oct));
+                        } else {
+                            $out .= $s[$count];
+                        }
+                }
+            }
+        }
+        return $out;
     }
     
     /**
@@ -119,7 +148,7 @@ class FPDF extends TCPDF {
      * @return string
      */
     function hex2str($hex) {
-    	return pack("H*", str_replace(array("\r", "\n", " "), "", $hex));
+    	return pack('H*', str_replace(array("\r", "\n", ' '), '', $hex));
     }
     
     /**
@@ -129,6 +158,6 @@ class FPDF extends TCPDF {
      * @return string
      */
     function str2hex($str) {
-        return current(unpack("H*", $str));
+        return current(unpack('H*', $str));
     }
 }
